@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<!-- 
+  ╔═══════════════════════════════════════════════════════╗
+  ║  ENTRA 个人网站 — 科幻风格原型 v12                    ║
+  ║                                                       ║
+  ║  技术栈: 纯 HTML + CSS + JavaScript（无框架依赖）     ║
+  ║  特性:                                                ║
+  ║    • 暗色/亮色双主题（背景图 + 毛玻璃效果）           ║
+  ║    • 可伸缩侧边栏导航（桌面端）                       ║
+  ║    • 粒子星空动画（Canvas）                           ║
+  ║    • 滚动渐入动画（IntersectionObserver）             ║
+  ║    • 响应式布局（桌面/平板/手机）                     ║
+  ║                                                       ║
+  ║  文件结构:                                            ║
+  ║    1. <style>  — 所有 CSS 样式                        ║
+  ║    2. <body>   — HTML 结构                            ║
+  ║    3. <script> — JavaScript 交互逻辑                  ║
+  ║                                                       ║
+  ║  正式部署时建议拆分为独立的 .css 和 .js 文件          ║
+  ╚═══════════════════════════════════════════════════════╝
+-->
+<html lang="zh-CN" data-theme="dark">
+<!-- data-theme 属性控制全局主题: "dark" 暗色 / "light" 亮色 -->
+<!-- CSS 里通过 [data-theme="light"] 选择器覆盖暗色变量 -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENTRA · 星际个人站</title>
+<!-- 
+  Google Fonts 加载（3种字体）:
+  • Orbitron — 标题字体，科幻风格的等宽几何字体
+  • Noto Sans SC — 正文中文字体，思源黑体
+  • JetBrains Mono — 代码/标签字体，等宽字体
+  提示: 正式部署时可下载字体文件放本地，避免网络加载延迟
+-->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============ THEME ============ */
+/*
+  ╔══════════════════════════════════════════════════╗
+  ║  🎨 背景图片配置 — 只需修改下面的 URL 即可更换  ║
+  ║                                                  ║
+  ║  推荐免费图片来源:                                ║
+  ║  • unsplash.com (搜: sci-fi city, space station) ║
+  ║  • wallhaven.cc (搜: 科幻 壁纸)                  ║
+  ║  • 从B站视频截一帧高清图                          ║
+  ║                                                  ║
+  ║  使用方法:                                        ║
+  ║  1. 找到喜欢的图片，右键复制图片地址              ║
+  ║  2. 替换下方 url('...') 里的链接                  ║
+  ║  3. 或者把图片放在同目录，写文件名如 url('bg.jpg')║
+  ╚══════════════════════════════════════════════════╝
+*/
+:root{
+  /* ↓↓↓ 暗色主题背景图（太空/星空）↓↓↓ */
+  --bg-img-dark: url('https://images.unsplash.com/photo-1534996858221-380b92700493?w=1920&q=80');
+  /* ↓↓↓ 亮色主题背景图（科幻城市）↓↓↓ */
+  --bg-img-light: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920&q=80');
+
+  /* === 暗色主题颜色变量 === */
+  --bg:#080c18;          /* 页面底色（深蓝黑） */
+  --bg2:#0d1a34;         /* 次级底色（稍亮的深蓝） */
+  --bg-card:rgba(13,26,52,0.55); /* 卡片底色（半透明深蓝，配合毛玻璃） */
+  --sb-bg:rgba(17,24,39,0.85);   /* 侧边栏底色 */
+  --sb-active-bg:#080c18;         /* 侧边栏选中项底色（和页面底色一致，形成"凸出"效果） */
+  --text1:#e8ecf4;       /* 主要文字色（浅白） */
+  --text2:#7a92b5;       /* 次要文字色（淡蓝灰） */
+  --accent:#5eafed;      /* 强调色/链接色（冰蓝） */
+  --accent2:#a78bfa;     /* 第二强调色（紫色，用于副标题等） */
+  --glow:#00d4ff;        /* 发光效果色（亮青） */
+  --cream:#f0ece4;       /* 奶白色（用于大标题） */
+  --glass:rgba(94,175,237,0.08);       /* 毛玻璃淡底色 */
+  --glass-b:rgba(255,255,255,0.12);    /* 毛玻璃边框色 */
+  --glass-card:rgba(255,255,255,0.06); /* 毛玻璃卡片底色 */
+  --glass-card-border:rgba(255,255,255,0.1); /* 毛玻璃卡片边框 */
+  --shadow:0 8px 32px rgba(0,0,0,0.35); /* 卡片阴影 */
+  --R:16px;              /* 大圆角半径（卡片） */
+  --Rs:10px;             /* 小圆角半径（按钮/标签） */
+  --sb-w:260px;          /* 侧边栏展开宽度 */
+  --sb-c:78px;           /* 侧边栏收起宽度（只显示图标） */
+}
+
+/* === 亮色主题颜色覆盖 === */
+[data-theme="light"]{
+  --bg:#f0ece4;          /* 暖米色底 */
+  --bg2:#e6e2d8;
+  --bg-card:rgba(255,255,255,0.45);    /* 半透明白卡片 */
+  --sb-bg:rgba(255,255,255,0.75);      /* 毛玻璃白侧边栏 */
+  --sb-active-bg:rgba(240,236,228,0.9);
+  --text1:#1a1e28;       /* 深色文字 */
+  --text2:#4a5468;       /* 次级文字 */
+  --accent:#2563eb;      /* 蓝色强调 */
+  --accent2:#7c3aed;     /* 紫色强调 */
+  --glow:#1d4ed8;
+  --cream:#1e293b;
+  --glass:rgba(37,99,235,0.06);
+  --glass-b:rgba(0,0,0,0.08);
+  --glass-card:rgba(255,255,255,0.4);
+  --glass-card-border:rgba(255,255,255,0.6);
+  --shadow:0 8px 32px rgba(0,0,0,0.08);
+}
+
+/* ============ RESET ============ */
+*,*::before,*::after{
+  margin:0;padding:0;box-sizing:border-box;
+  /* Windows/安卓 字体清晰度优化 */
+  -webkit-font-smoothing:subpixel-antialiased;
+  -moz-osx-font-smoothing:auto;
+  text-rendering:optimizeLegibility;
+  -webkit-text-size-adjust:100%;
+}
+html{overflow-x:hidden}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Noto Sans SC",system-ui,sans-serif;
+  background:var(--bg);color:var(--text1);
+  line-height:1.75;overflow-x:hidden;
+  transition:background .5s,color .4s;
+  font-smooth:always;
+}
+a{color:inherit;text-decoration:none}
+
+/* ============ 背景图片系统 ============ 
+   层级从下到上: 背景图 → 半透明遮罩 → 渐变装饰 → 粒子Canvas → 内容
+   遮罩的作用: 让背景图不会太亮/太暗，确保文字可读
+*/
+.bg-image{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  z-index:0;pointer-events:none;
+  background-size:cover;background-position:center;background-attachment:fixed;
+  transition:opacity .8s ease;
+}
+.bg-image-dark{
+  background-image:var(--bg-img-dark);
+}
+.bg-image-light{
+  background-image:var(--bg-img-light);
+}
+/* Dark overlay to ensure readability */
+.bg-image-dark::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(8,12,24,0.7) 0%,rgba(8,12,24,0.5) 50%,rgba(8,12,24,0.75) 100%);
+}
+.bg-image-light::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(240,236,228,0.65) 0%,rgba(240,236,228,0.45) 50%,rgba(240,236,228,0.7) 100%);
+}
+
+[data-theme="light"] .bg-image-dark{opacity:0}
+[data-theme="dark"] .bg-image-dark{opacity:1}
+[data-theme="dark"] .bg-image-light{opacity:0}
+[data-theme="light"] .bg-image-light{opacity:1}
+
+/* Scene gradients on top */
+.scene-bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;transition:opacity .8s}
+.scene-dark{background:radial-gradient(ellipse at 60% 40%,rgba(94,175,237,0.04) 0%,transparent 50%),radial-gradient(ellipse at 25% 65%,rgba(167,139,250,0.03) 0%,transparent 45%)}
+[data-theme="light"] .scene-dark{opacity:0}
+[data-theme="dark"] .scene-dark{opacity:1}
+.scene-light{background:linear-gradient(180deg,rgba(180,210,240,0.15) 0%,rgba(220,215,205,0.05) 30%,transparent 60%)}
+[data-theme="dark"] .scene-light{opacity:0}
+[data-theme="light"] .scene-light{opacity:1}
+#pc{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none}
+[data-theme="light"] #pc{opacity:.08}
+
+/* ============================================
+   侧边栏导航 — 可伸缩设计
+   
+   核心原理:
+   • 默认宽度 78px（只显示图标）
+   • 鼠标悬停时展开到 260px（显示图标+文字）
+   • 展开时主内容区自动右移（JS控制margin-left）
+   
+   选中项效果（参考风格）:
+   • 背景色变为页面底色，左侧圆角
+   • 上下两个弧形缺口（::before / ::after 用 box-shadow 实现）
+   • 图标有彩色圆形背景
+   ============================================ */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;
+  width:var(--sb-c);
+  background:var(--sb-bg);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  padding-left:9px;
+  overflow:hidden;
+  z-index:100;
+  transition:width .4s cubic-bezier(.4,0,.2,1),background .5s;
+  display:flex;flex-direction:column;
+  border-right:1px solid var(--glass-card-border);
+}
+.sidebar:hover{width:var(--sb-w)}
+
+/* Logo */
+.sb-logo{
+  display:flex;align-items:center;gap:12px;
+  padding:20px 0 20px 14px;
+  white-space:nowrap;margin-bottom:20px;
+}
+.sb-logo-icon{
+  width:40px;height:40px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:16px;font-weight:900;color:#fff;
+}
+.sb-logo-text{opacity:0;transition:opacity .3s .1s}
+.sidebar:hover .sb-logo-text{opacity:1}
+.sb-logo-text h2{
+  font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;
+  color:var(--accent);letter-spacing:3px;
+}
+.sb-logo-text p{font-size:10px;color:var(--text2);margin-top:1px}
+
+/* Nav list */
+.sb-nav{flex:1;list-style:none;position:relative}
+
+.sb-nav li{
+  position:relative;list-style:none;
+}
+
+.sb-nav li a{
+  position:relative;display:flex;align-items:center;
+  white-space:nowrap;text-decoration:none;
+  padding:0;
+}
+
+/* Icon circle area */
+.sb-nav li a .nav-icon{
+  position:relative;display:flex;justify-content:center;align-items:center;
+  min-width:60px;height:60px;
+  transition:.4s;
+  z-index:2;
+}
+.sb-nav li a .nav-icon svg{
+  width:20px;height:20px;
+  stroke:var(--text2);fill:none;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;
+  transition:stroke .3s;position:relative;z-index:2;
+}
+
+/* Text label */
+.sb-nav li a .nav-text{
+  display:flex;align-items:center;height:60px;
+  font-size:13.5px;font-weight:500;color:var(--text2);
+  padding-left:8px;transition:color .3s,opacity .3s .1s;
+  opacity:0;
+}
+.sidebar:hover .sb-nav li a .nav-text{opacity:1}
+
+/* Hover */
+.sb-nav li:hover a .nav-icon svg{stroke:var(--accent)}
+.sb-nav li:hover a .nav-text{color:var(--accent)}
+
+/* ===== 选中状态 — 弧形缺口效果 =====
+   实现原理:
+   1. 选中项背景色 = 页面底色（视觉上像是"凸出来"了）
+   2. 左侧大圆角让选中项有"胶囊"形状
+   3. ::before 在上方创建一个20px圆形，用 box-shadow 填充缺口
+   4. ::after 在下方同理
+   
+   如果要修改缺口大小，改 width/height 和 border-radius 的值
+   box-shadow 的 5px 5px 0 5px 控制缺口填充范围
+*/
+.sb-nav li.active{
+  background:var(--sb-active-bg);
+  border-top-left-radius:40px;
+  border-bottom-left-radius:40px;
+}
+
+/* Top curved cutout */
+.sb-nav li.active::before{
+  content:'';position:absolute;
+  top:-20px;right:0;
+  width:20px;height:20px;
+  border-bottom-right-radius:20px;
+  box-shadow:5px 5px 0 5px var(--sb-active-bg);
+  background:transparent;
+  z-index:1;
+}
+/* Bottom curved cutout */
+.sb-nav li.active::after{
+  content:'';position:absolute;
+  bottom:-20px;right:0;
+  width:20px;height:20px;
+  border-top-right-radius:20px;
+  box-shadow:5px -5px 0 5px var(--sb-active-bg);
+  background:transparent;
+  z-index:1;
+}
+
+/* Active icon gets colored circle background */
+.sb-nav li.active a .nav-icon::before{
+  content:'';position:absolute;
+  inset:5px;width:50px;height:50px;
+  background:var(--accent);
+  border-radius:50%;
+  transition:.4s;
+  z-index:1;
+}
+.sb-nav li.active a .nav-icon svg{
+  stroke:#fff;z-index:2;position:relative;
+}
+.sb-nav li.active a .nav-text{
+  color:var(--accent);font-weight:600;
+}
+
+/* 每个导航项的独立颜色（鼠标悬停和选中时使用）
+   如果要改颜色，修改对应的 --item-clr 值
+   颜色建议: 用饱和度适中的颜色，太亮会刺眼 */
+.sb-nav li:nth-child(1){--item-clr:#5eafed}  /* 首页 — 冰蓝 */
+.sb-nav li:nth-child(2){--item-clr:#a78bfa}  /* 关于我 — 紫色 */
+.sb-nav li:nth-child(3){--item-clr:#34d399}  /* 项目 — 翠绿 */
+.sb-nav li:nth-child(4){--item-clr:#f59e0b}  /* 文章 — 琥珀 */
+.sb-nav li:nth-child(5){--item-clr:#f472b6}  /* 网站合集 — 粉色 */
+.sb-nav li:nth-child(6){--item-clr:#60a5fa}  /* 联系 — 天蓝 */
+
+.sb-nav li.active a .nav-icon::before{background:var(--item-clr)}
+.sb-nav li:hover a .nav-icon svg{stroke:var(--item-clr)}
+.sb-nav li:hover a .nav-text{color:var(--item-clr)}
+.sb-nav li.active a .nav-text{color:var(--item-clr)}
+
+/* Divider */
+.sb-div{height:1px;background:var(--glass-b);margin:16px 14px 16px 14px}
+
+/* ====================================================
+   日夜切换按钮 — 使用 <theme-button> Web Component
+   
+   这个按钮是独立的自定义元素，内部用 Shadow DOM 封装
+   我们只需要:
+   1. 在 HTML 里放 <theme-button> 标签
+   2. 监听它的 'change' 事件获取主题值
+   3. 通过 size 属性控制大小
+   ==================================================== */
+
+/* 侧边栏底部容器 */
+.sb-footer{
+  padding:10px 10px 20px;
+  display:flex;justify-content:center;
+  flex-direction:column;align-items:center;gap:8px;
+}
+
+/* 侧边栏收起时显示的小图标按钮 */
+.sb-footer-mini{
+  display:flex;justify-content:center;align-items:center;
+  width:48px;height:40px;margin:0 auto;
+  border-radius:var(--Rs);background:var(--glass);border:1px solid var(--glass-b);
+  cursor:pointer;font-size:18px;color:var(--accent);transition:all .3s;
+}
+.sb-footer-mini:hover{border-color:var(--accent)}
+.sidebar:hover .sb-footer-mini{display:none}
+
+/* Web Component 按钮容器 — 侧边栏收起时隐藏 */
+.dn-toggle-wrap{
+  transition:opacity .3s;
+  display:flex;justify-content:center;
+  overflow:visible;
+}
+.sidebar:not(:hover) .dn-toggle-wrap{
+  opacity:0;pointer-events:none;position:absolute;
+}
+
+/* ============================================
+   LAYOUT — Main content adapts to sidebar
+   ============================================ */
+.main{
+  margin-left:var(--sb-c);
+  padding:40px 48px;
+  min-height:100vh;
+  position:relative;z-index:2;
+  transition:margin-left .4s cubic-bezier(.4,0,.2,1);
+}
+.sidebar:hover ~ .layout-wrap .main,
+.sidebar:hover + .layout-wrap .main{
+  margin-left:var(--sb-w);
+}
+
+/* We need JS for this since CSS sibling selector has limits */
+
+/* ============================================
+   MOBILE
+   ============================================ */
+.topbar{
+  display:none;position:fixed;top:0;left:0;right:0;height:56px;
+  background:var(--sb-bg);backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--glass-b);
+  z-index:200;padding:0 20px;align-items:center;justify-content:space-between;
+  transition:all .4s;
+}
+.topbar-logo{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;color:var(--accent);letter-spacing:3px}
+.topbar-r{display:flex;align-items:center;gap:12px}
+.topbar-theme{
+  width:34px;height:34px;border-radius:50%;border:1px solid var(--glass-b);
+  background:var(--glass);cursor:pointer;display:flex;align-items:center;
+  justify-content:center;color:var(--accent);font-size:14px;transition:all .3s;
+}
+.mob-btn{
+  width:34px;height:34px;border-radius:8px;border:1px solid var(--glass-b);
+  background:var(--glass);cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;
+}
+.mob-btn span{width:16px;height:1.5px;background:var(--accent);border-radius:1px}
+.mob-menu{
+  display:none;position:fixed;top:56px;left:0;right:0;bottom:0;
+  background:var(--sb-bg);backdrop-filter:blur(24px);z-index:190;padding:20px;
+  flex-direction:column;gap:4px;
+}
+.mob-menu.open{display:flex}
+.mob-menu a{
+  display:flex;align-items:center;gap:14px;padding:14px 18px;
+  border-radius:var(--Rs);font-size:15px;color:var(--text2);transition:all .25s;
+}
+.mob-menu a:hover,.mob-menu a.active{background:var(--glass);color:var(--accent)}
+
+/* ============================================
+   CONTENT STYLES
+   ============================================ */
+.hero{min-height:calc(100vh - 80px);display:flex;align-items:center;position:relative}
+.hero-content{max-width:680px;position:relative;z-index:5}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 20px;border:1px solid var(--glass-card-border);border-radius:20px;
+  background:var(--glass-card);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  font-size:13px;font-weight:500;color:var(--text2);letter-spacing:2px;
+  margin-bottom:24px;animation:fadeUp .8s ease .2s both;
+  text-shadow:0 1px 3px rgba(0,0,0,0.3);
+}
+.hero-tag .dot{width:5px;height:5px;background:#22c55e;border-radius:50%;box-shadow:0 0 6px #22c55e;animation:blink 2s infinite}
+.hero h1{
+  font-family:'Orbitron',sans-serif;font-size:clamp(48px,8vw,100px);font-weight:900;
+  line-height:1.05;color:var(--cream);letter-spacing:3px;animation:fadeUp 1s ease .35s both;
+  text-shadow:0 2px 8px rgba(0,0,0,0.4);
+}
+[data-theme="light"] .hero h1{color:var(--text1);text-shadow:0 1px 4px rgba(255,255,255,0.5)}
+[data-theme="light"] .hero-sub{color:var(--accent2);text-shadow:0 1px 3px rgba(255,255,255,0.4)}
+[data-theme="light"] .sec-title{text-shadow:0 1px 3px rgba(255,255,255,0.4)}
+[data-theme="light"] .hero-desc,[data-theme="light"] .about-text,[data-theme="light"] .sec-desc{color:var(--text1);opacity:.75;text-shadow:0 1px 2px rgba(255,255,255,0.5)}
+.hero-sub{font-size:clamp(17px,2.2vw,24px);color:var(--accent2);font-weight:500;letter-spacing:4px;margin-top:10px;margin-bottom:28px;animation:fadeUp 1s ease .5s both;text-shadow:0 1px 4px rgba(0,0,0,0.4)}
+.hero-desc{font-size:17px;font-weight:400;color:var(--text1);line-height:1.9;max-width:520px;margin-bottom:36px;animation:fadeUp 1s ease .65s both;text-shadow:0 1px 4px rgba(0,0,0,0.35);opacity:.85}
+.hero-cta{
+  display:inline-flex;align-items:center;gap:12px;
+  padding:14px 36px;border:1.5px solid var(--glass-card-border);border-radius:var(--Rs);
+  background:var(--glass-card);color:var(--accent);font-size:14px;font-weight:600;
+  letter-spacing:2px;text-transform:uppercase;transition:all .4s;cursor:pointer;
+  animation:fadeUp 1s ease .8s both;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.hero-cta:hover{background:rgba(94,175,237,0.15);border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(94,175,237,0.1)}
+.hero-cta .arr{transition:transform .3s}
+.hero-cta:hover .arr{transform:translateX(5px)}
+
+.sec{padding:100px 0}
+.sec-label{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:600;letter-spacing:5px;color:var(--accent);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px;text-shadow:0 0 6px rgba(94,175,237,0.3)}
+.sec-label::before{content:'';width:20px;height:1px;background:var(--accent);box-shadow:0 0 4px var(--accent)}
+.sec-title{font-family:'Orbitron',"Microsoft YaHei",sans-serif;font-size:clamp(28px,4vw,44px);font-weight:900;line-height:1.2;margin-bottom:14px;text-shadow:0 2px 6px rgba(0,0,0,0.3)}
+.sec-desc{color:var(--text2);font-size:16px;font-weight:400;margin-bottom:48px;text-shadow:0 1px 2px rgba(0,0,0,0.2)}
+
+/* About */
+.about-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:60px;align-items:center}
+.about-text{color:var(--text2);font-size:16px;font-weight:400;line-height:2;margin-bottom:28px;text-shadow:0 1px 2px rgba(0,0,0,0.2)}
+.skills{display:flex;flex-wrap:wrap;gap:8px}
+.sk{padding:7px 18px;border:1px solid var(--glass-card-border);border-radius:var(--Rs);background:var(--glass-card);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:var(--accent);transition:all .3s;text-shadow:0 0 4px rgba(94,175,237,0.2)}
+.sk:hover{border-color:var(--accent);transform:translateY(-1px)}
+.av-wrap{display:flex;justify-content:center}
+.av-ring{width:280px;height:280px;border-radius:50%;border:1px solid var(--glass-b);position:relative;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(94,175,237,0.03),transparent)}
+.av-ring::before{content:'';position:absolute;width:320px;height:320px;border-radius:50%;border:1px dashed rgba(94,175,237,0.07);animation:spin 30s linear infinite}
+.av-ring::after{content:'';position:absolute;width:360px;height:360px;border-radius:50%;border:1px dashed rgba(94,175,237,0.04);animation:spin 45s linear infinite reverse}
+.av-core{width:220px;height:220px;border-radius:50%;background:linear-gradient(135deg,var(--bg2),rgba(94,175,237,0.06));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:64px;font-weight:900;color:var(--accent);box-shadow:0 0 50px rgba(94,175,237,0.05),inset 0 0 30px rgba(0,0,0,0.15)}
+.od{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--glow);box-shadow:0 0 8px var(--glow)}
+.od:nth-child(1){top:5px;right:55px;animation:blink 3s 0s infinite}
+.od:nth-child(2){bottom:25px;left:12px;animation:blink 3s 1s infinite}
+.od:nth-child(3){top:48%;right:-3px;animation:blink 3s 2s infinite}
+
+/* Projects */
+.pg{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.pc{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:var(--R);
+  padding:32px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  transition:all .35s ease;
+  position:relative;overflow:hidden;cursor:pointer;
+}
+.pc::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),transparent);opacity:0;transition:opacity .4s}
+.pc:hover{
+  transform:translateY(-4px);
+  border-color:#4a7eff;
+  box-shadow:0 8px 30px rgba(74,126,255,0.2),
+             inset 0 0 12px rgba(138,43,226,0.15);
+  background:rgba(255,255,255,0.1);
+}
+.pc:hover::before{opacity:1}
+.pn{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:600;color:var(--accent);letter-spacing:2px;margin-bottom:14px;opacity:.8}
+.pc h3{font-size:19px;font-weight:700;margin-bottom:10px;text-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.pc p{color:var(--text2);font-size:14.5px;font-weight:400;line-height:1.8;margin-bottom:18px}
+.pt{display:flex;flex-wrap:wrap;gap:6px}
+.pt span{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:500;padding:4px 12px;border:1px solid var(--glass-card-border);border-radius:6px;color:var(--accent);background:var(--glass-card);backdrop-filter:blur(6px)}
+
+/* Articles */
+.tabs{display:flex;gap:6px;margin-bottom:32px;flex-wrap:wrap}
+.tab{padding:8px 20px;border:1px solid var(--glass-card-border);border-radius:var(--Rs);background:var(--glass-card);backdrop-filter:blur(8px);color:var(--text2);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all .3s}
+.tab:hover,.tab.on{border-color:var(--accent);color:var(--accent);background:var(--glass)}
+.al{display:flex;flex-direction:column;gap:2px}
+.ai{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-radius:var(--Rs);transition:all .3s;cursor:pointer;border:1px solid transparent}
+.ai:hover{background:var(--glass-card);border-color:var(--glass-card-border);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.ai-l{display:flex;align-items:center;gap:14px}
+.ai-d{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:var(--text2);min-width:92px}
+.ai-t{font-size:11px;font-weight:500;padding:4px 12px;border-radius:6px;background:var(--glass-card);color:var(--accent);backdrop-filter:blur(6px)}
+.ai-n{font-size:16px;font-weight:500}
+.ai-a{color:var(--text2);font-size:15px;opacity:0;transition:all .3s}
+.ai:hover .ai-a{opacity:1;transform:translateX(4px)}
+
+/* Bookmarks */
+.bmg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.bmc{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:var(--R);padding:24px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  transition:all .35s ease;cursor:pointer;
+}
+.bmc:hover{
+  transform:translateY(-4px);
+  border-color:#4a7eff;
+  box-shadow:0 8px 30px rgba(74,126,255,0.2),
+             inset 0 0 12px rgba(138,43,226,0.15);
+  background:rgba(255,255,255,0.1);
+}
+.bmc-i{width:40px;height:40px;border-radius:var(--Rs);background:linear-gradient(135deg,rgba(94,175,237,0.12),rgba(167,139,250,0.06));display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px}
+.bmc h4{font-size:15px;font-weight:500;margin-bottom:5px}
+.bmc p{font-size:12.5px;color:var(--text2);line-height:1.5}
+
+/* Footer */
+.footer-sec{padding:80px 0 60px;border-top:1px solid var(--glass-b);min-height:80vh}
+.footer-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+.si{display:flex;gap:14px;margin-bottom:32px}
+.sic{width:44px;height:44px;border-radius:var(--Rs);border:1px solid var(--glass-card-border);background:var(--glass-card);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;transition:all .3s;cursor:pointer;position:relative}
+.sic svg{width:18px;height:18px;fill:var(--text2);transition:fill .3s}
+.sic:hover{border-color:var(--accent);transform:translateY(-2px)}
+.sic:hover svg{fill:var(--accent)}
+.sic .tp{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text2);white-space:nowrap;opacity:0;transition:opacity .3s;pointer-events:none}
+.sic:hover .tp{opacity:1}
+.mb textarea{width:100%;height:110px;background:var(--glass-card);border:1px solid var(--glass-card-border);border-radius:var(--R);padding:16px;color:var(--text1);font-family:inherit;font-size:14px;resize:vertical;outline:none;transition:border-color .3s;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.mb textarea:focus{border-color:rgba(94,175,237,0.35)}
+.mb textarea::placeholder{color:var(--text2);opacity:.5}
+.send-btn{margin-top:12px;padding:12px 28px;border:1px solid var(--glass-b);border-radius:var(--Rs);background:var(--glass);color:var(--accent);font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:2px;cursor:pointer;transition:all .3s}
+.send-btn:hover{background:rgba(94,175,237,0.12);border-color:var(--accent)}
+.copy{font-size:12px;font-weight:400;color:var(--text2);opacity:.5;letter-spacing:1px;margin-top:48px;text-align:center}
+
+/* BTT */
+.btt{position:fixed;bottom:24px;right:24px;z-index:999;width:40px;height:40px;border-radius:var(--Rs);border:1px solid var(--glass-b);background:var(--bg-card);backdrop-filter:blur(10px);color:var(--accent);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(12px);transition:all .3s;pointer-events:none}
+.btt.show{opacity:1;transform:translateY(0);pointer-events:all}
+
+/* Reveal — staggered, gradual appearance */
+.rv{
+  opacity:0;transform:translateY(45px) scale(0.97);
+  filter:blur(3px);
+  transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1),filter .7s ease;
+}
+.rv.vis{
+  opacity:1;transform:translateY(0) scale(1);
+  filter:blur(0);
+}
+/* Stagger children inside grids */
+.pg .rv:nth-child(1){transition-delay:.05s}
+.pg .rv:nth-child(2){transition-delay:.12s}
+.pg .rv:nth-child(3){transition-delay:.19s}
+.pg .rv:nth-child(4){transition-delay:.26s}
+.bmg .rv:nth-child(1){transition-delay:.05s}
+.bmg .rv:nth-child(2){transition-delay:.1s}
+.bmg .rv:nth-child(3){transition-delay:.15s}
+.bmg .rv:nth-child(4){transition-delay:.2s}
+.bmg .rv:nth-child(5){transition-delay:.25s}
+.bmg .rv:nth-child(6){transition-delay:.3s}
+.al .rv:nth-child(1){transition-delay:.05s}
+.al .rv:nth-child(2){transition-delay:.1s}
+.al .rv:nth-child(3){transition-delay:.15s}
+.al .rv:nth-child(4){transition-delay:.2s}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:900px){
+  .sidebar{display:none}
+  .topbar{display:flex}
+  .main{margin-left:0!important;padding:72px 20px 32px}
+  .hero{min-height:calc(100vh - 100px)}
+  .hero h1{font-size:clamp(36px,10vw,64px)}
+  .about-grid{grid-template-columns:1fr;gap:40px;text-align:center}
+  .av-wrap{order:-1}
+  .sec-label{justify-content:center}.sec-label::before{display:none}
+  .skills{justify-content:center}
+  .av-ring{width:200px;height:200px}
+  .av-ring::before{width:230px;height:230px}.av-ring::after{width:260px;height:260px}
+  .av-core{width:160px;height:160px;font-size:44px}
+  .pg{grid-template-columns:1fr}.bmg{grid-template-columns:1fr}
+  .ai{flex-direction:column;align-items:flex-start;gap:8px}
+  .footer-grid{grid-template-columns:1fr}
+}
+@media(max-width:480px){.hero h1{font-size:32px;letter-spacing:2px}.hero-cta{padding:12px 24px;font-size:12px}}
+</style>
+</head>
+<body>
+
+<!-- ============================================
+     背景层（固定定位，不随页面滚动）
+     层级: 背景图 → 渐变遮罩 → 粒子Canvas
+     ============================================ -->
+<div class="bg-image bg-image-dark"></div>  <!-- 暗色主题背景图 -->
+<div class="bg-image bg-image-light"></div> <!-- 亮色主题背景图 -->
+<div class="scene-bg scene-dark"></div>     <!-- 暗色渐变装饰 -->
+<div class="scene-bg scene-light"></div>    <!-- 亮色渐变装饰 -->
+<canvas id="pc"></canvas>                   <!-- 粒子星空动画画布 -->
+
+<!-- ============================================
+     侧边栏（桌面端显示，手机端隐藏）
+     • 鼠标悬停展开/离开收起
+     • 包含: Logo + 导航列表 + 主题切换按钮
+     ============================================ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">E</div>
+    <div class="sb-logo-text">
+      <h2>ENTRA</h2>
+      <p>供应链 / 自动化</p>
+    </div>
+  </div>
+
+  <ul class="sb-nav" id="sideNav">
+    <li class="active" data-target="hero">
+      <a href="#hero">
+        <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <div class="nav-text">首页</div>
+      </a>
+    </li>
+    <li data-target="about">
+      <a href="#about">
+        <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div class="nav-text">关于我</div>
+      </a>
+    </li>
+    <li data-target="projects">
+      <a href="#projects">
+        <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div>
+        <div class="nav-text">项目</div>
+      </a>
+    </li>
+    <li data-target="articles">
+      <a href="#articles">
+        <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <div class="nav-text">文章</div>
+      </a>
+    </li>
+    <li data-target="bookmarks">
+      <a href="#bookmarks">
+        <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></div>
+        <div class="nav-text">网站合集</div>
+      </a>
+    </li>
+    <li data-target="contact">
+      <a href="#contact">
+        <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+        <div class="nav-text">联系</div>
+      </a>
+    </li>
+  </ul>
+
+  <div class="sb-div"></div>
+  <div class="sb-footer">
+    <!-- 侧边栏收起时显示的小图标（点击也能切换主题） -->
+    <div class="sb-footer-mini" id="themeMinBtn">☾</div>
+    <!-- 侧边栏展开时显示完整的日夜切换按钮 -->
+    <div class="dn-toggle-wrap">
+      <!-- 
+        theme-button 自定义组件
+        • value="dark" — 初始主题（和 html data-theme 对应）
+        • size="2" — 按钮大小（数值越大越大，默认3）
+        • 监听 change 事件获取 'light' 或 'dark'
+      -->
+      <theme-button id="themeBtn" value="dark" size="2"></theme-button>
+    </div>
+  </div>
+</aside>
+
+<!-- ============================================
+     手机端顶栏 + 汉堡菜单（桌面端隐藏）
+     • 900px 以下显示
+     • 点击汉堡按钮展开全屏菜单
+     ============================================ -->
+<div class="topbar">
+  <div class="topbar-logo">ENTRA</div>
+  <div class="topbar-r">
+    <button class="topbar-theme" id="tbMob">☾</button>
+    <div class="mob-btn" id="mobBtn"><span></span><span></span><span></span></div>
+  </div>
+</div>
+<div class="mob-menu" id="mobMenu">
+  <a href="#hero" onclick="closeMob()">首页</a>
+  <a href="#about" onclick="closeMob()">关于我</a>
+  <a href="#projects" onclick="closeMob()">项目</a>
+  <a href="#articles" onclick="closeMob()">文章</a>
+  <a href="#bookmarks" onclick="closeMob()">网站合集</a>
+  <a href="#contact" onclick="closeMob()">联系</a>
+</div>
+
+<!-- ============================================
+     主内容区域
+     • margin-left 随侧边栏伸缩变化（JS控制）
+     • 包含6个板块: 首页/关于/项目/文章/合集/联系
+     ============================================ -->
+<div class="layout-wrap">
+<main class="main" id="mainContent">
+
+  <!-- ====== 首页 Hero 区域 ====== -->
+  <section class="hero" id="hero">
+    <div class="hero-content">
+      <div class="hero-tag"><span class="dot"></span>供应链 · Python · 自动化</div>
+      <h1>ENTRA</h1>
+      <p class="hero-sub">数据自动化 & 工具开发</p>
+      <p class="hero-desc">非科班出身，从零开始学 Python。<br>用代码解决工作中的实际问题，把重复劳动交给程序。</p>
+      <a class="hero-cta" href="#about">了解更多 <span class="arr">→</span></a>
+    </div>
+  </section>
+
+  <section class="sec" id="about">
+    <div class="about-grid">
+      <div class="rv">
+        <div class="sec-label">关于我</div>
+        <h2 class="sec-title">从零到系统<br>一步步搞出来的</h2>
+        <p class="about-text">做供应链的，每天跟 Excel 打交道。后来学了 Python，发现很多重复的活儿都能让程序干。从最简单的脚本开始写起，到现在能搞定复杂的数据处理系统。</p>
+        <div class="skills"><span class="sk">Python</span><span class="sk">Excel 自动化</span><span class="sk">数据处理</span><span class="sk">GUI 开发</span><span class="sk">PyQt5</span><span class="sk">正则表达式</span><span class="sk">模糊匹配</span></div>
+      </div>
+      <div class="av-wrap rv"><div class="av-ring"><div class="od"></div><div class="od"></div><div class="od"></div><div class="av-core">E</div></div></div>
+    </div>
+  </section>
+
+  <section class="sec" id="projects">
+    <div class="rv"><div class="sec-label">项目</div><h2 class="sec-title">开发作品集</h2><p class="sec-desc">每个项目都源于真实业务需求</p></div>
+    <div class="pg">
+      <div class="pc rv"><div class="pn">PROJECT 01</div><h3>出货单处理系统</h3><p>将供应商交货文件转换为标准化 SKU 编码。三级匹配策略，处理复合型号和多种数据格式变体。</p><div class="pt"><span>Python</span><span>openpyxl</span><span>FuzzyWuzzy</span><span>PyQt5</span></div></div>
+      <div class="pc rv"><div class="pn">PROJECT 02</div><h3>考勤数据处理工具</h3><p>处理钉钉考勤导出数据，自动计算工时、处理合并单元格，生成规范化考勤报表。</p><div class="pt"><span>Python</span><span>pandas</span><span>Excel</span></div></div>
+      <div class="pc rv"><div class="pn">PROJECT 03</div><h3>店铺扣款汇总工具</h3><p>从多个 Excel 文件中聚合数据，自动分类汇总，生成清晰财务报告。</p><div class="pt"><span>Python</span><span>openpyxl</span><span>数据聚合</span></div></div>
+      <div class="pc rv"><div class="pn">PROJECT 04</div><h3>更多小工具</h3><p>ICO 转换器、正则学习游戏等实用工具，持续探索新技术。</p><div class="pt"><span>Python</span><span>PyInstaller</span><span>Nuitka</span></div></div>
+    </div>
+  </section>
+
+  <section class="sec" id="articles">
+    <div class="rv"><div class="sec-label">文章</div><h2 class="sec-title">折腾记录</h2><p class="sec-desc">写代码踩过的坑和学到的东西</p></div>
+    <div class="tabs rv"><button class="tab on">全部</button><button class="tab">Python</button><button class="tab">工具开发</button><button class="tab">踩坑记录</button><button class="tab">随笔</button></div>
+    <div class="al">
+      <a class="ai rv" href="#"><div class="ai-l"><span class="ai-d">2025-02-10</span><span class="ai-t">工具开发</span><span class="ai-n">出货单处理系统 v7.8 开发总结</span></div><span class="ai-a">→</span></a>
+      <a class="ai rv" href="#"><div class="ai-l"><span class="ai-d">2025-01-28</span><span class="ai-t">Python</span><span class="ai-n">模糊匹配算法的实战应用与踩坑</span></div><span class="ai-a">→</span></a>
+      <a class="ai rv" href="#"><div class="ai-l"><span class="ai-d">2025-01-15</span><span class="ai-t">踩坑</span><span class="ai-n">Excel 合并单元格处理方案汇总</span></div><span class="ai-a">→</span></a>
+      <a class="ai rv" href="#"><div class="ai-l"><span class="ai-d">2024-12-20</span><span class="ai-t">Python</span><span class="ai-n">从零开始的 PyQt5 GUI 之旅</span></div><span class="ai-a">→</span></a>
+    </div>
+  </section>
+
+  <section class="sec" id="bookmarks">
+    <div class="rv"><div class="sec-label">合集</div><h2 class="sec-title">常用工具</h2><p class="sec-desc">干活离不开的网站和工具</p></div>
+    <!-- ====================================================
+         网站合集配置
+         
+         修改方法:
+         1. href="#" → 改成目标网站链接
+         2. 图标可以用 emoji 或 SVG
+         3. 复制一个 <a class="bmc rv"> 块就能新增卡片
+         4. 删掉一个块就减少一张卡片
+         ==================================================== -->
+    <div class="bmg">
+      <a class="bmc rv" href="https://docs.python.org/zh-cn/3/" target="_blank"><div class="bmc-i">🐍</div><h4>Python 官方文档</h4><p>语言权威参考手册</p></a>
+      <a class="bmc rv" href="https://pypi.org/" target="_blank"><div class="bmc-i">📦</div><h4>PyPI</h4><p>Python 包索引</p></a>
+      <a class="bmc rv" href="https://github.com/" target="_blank"><div class="bmc-i">💻</div><h4>GitHub</h4><p>代码托管与协作</p></a>
+      <a class="bmc rv" href="https://openpyxl.readthedocs.io/" target="_blank"><div class="bmc-i">📊</div><h4>openpyxl</h4><p>Excel 处理核心库</p></a>
+      <a class="bmc rv" href="https://dribbble.com/" target="_blank"><div class="bmc-i">🎨</div><h4>Dribbble</h4><p>设计灵感</p></a>
+      <a class="bmc rv" href="https://www.markdownguide.org/" target="_blank"><div class="bmc-i">📝</div><h4>Markdown 指南</h4><p>语法快速入门</p></a>
+    </div>
+  </section>
+
+  <section class="footer-sec" id="contact">
+    <div class="footer-grid">
+      <div class="rv">
+        <h2 class="sec-title">找到我</h2>
+        <p style="color:var(--text2);font-size:15px;font-weight:400;margin-bottom:28px;text-shadow:0 1px 2px rgba(0,0,0,0.2)">有问题想聊，或者想一起搞点什么</p>
+        <div class="si">
+        <!-- ====================================================
+             社交链接配置
+             把 href="#" 改成你的真实链接，例如:
+             • GitHub:  href="https://github.com/你的用户名"
+             • Email:   href="mailto:你的邮箱@qq.com"
+             • Bilibili: href="https://space.bilibili.com/你的UID"
+             • 微信: 可以链接到一个二维码图片页面
+             • RSS:  href="/rss.xml"（部署Hexo后自动生成）
+             
+             如果要换图标，去 simpleicons.org 找 SVG path
+             ==================================================== -->
+          <a class="sic" href="https://github.com/entra5ntra" target="_blank"><svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg><span class="tp">GitHub</span></a>
+          <!-- ↓ 邮箱: 把 # 改成 mailto:你的邮箱@qq.com -->
+          <a class="sic" href="mailto:2710437252@qq.com"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg><span class="tp">Email</span></a>
+          <a class="sic" href="https:space.blibli.com/3546925448038573"><svg viewBox="0 0 24 24"><path d="M17.813 4.653h.854c1.51.054 2.769.578 3.773 1.574 1.004.995 1.524 2.249 1.56 3.76v7.36c-.036 1.51-.556 2.769-1.56 3.773s-2.262 1.524-3.773 1.56H5.333c-1.51-.036-2.769-.556-3.773-1.56S.036 18.858 0 17.347v-7.36c.036-1.511.556-2.765 1.56-3.76 1.004-.996 2.262-1.52 3.773-1.574h.774l-1.174-1.12a1.234 1.234 0 01-.373-.906c0-.356.124-.658.373-.907l.027-.027c.267-.249.573-.373.92-.373.347 0 .653.124.92.373L9.653 4.44c.071.071.134.142.187.213h4.267a.836.836 0 01.16-.213l2.853-2.747c.267-.249.573-.373.92-.373.347 0 .662.151.929.4.267.249.391.551.391.907 0 .355-.124.657-.373.906zM5.333 7.24c-.746.018-1.373.276-1.88.773-.506.498-.769 1.13-.786 1.894v7.52c.017.764.28 1.395.786 1.893.507.498 1.134.756 1.88.773h13.334c.746-.017 1.373-.275 1.88-.773.506-.498.769-1.129.786-1.893v-7.52c-.017-.765-.28-1.396-.786-1.894-.507-.497-1.134-.755-1.88-.773zM8 11.107c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c.017-.391.15-.711.4-.96.249-.249.56-.373.933-.373zm8 0c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c.017-.391.15-.711.4-.96.249-.249.56-.373.933-.373z"/></svg><span class="tp">Bilibili</span></a>
+          <a class="sic" href="https://raw.githubusercontent.com/entra5ntra/github.io/main/wechatqr.jpg"><svg viewBox="0 0 24 24"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 01.213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 00.167-.054l1.903-1.114a.864.864 0 01.717-.098 10.16 10.16 0 002.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 01-1.162 1.178A1.17 1.17 0 014.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 01-1.162 1.178 1.17 1.17 0 01-1.162-1.178c0-.651.52-1.18 1.162-1.18zm3.97 4.326c-3.85 0-7.048 2.631-7.048 5.968s3.198 5.968 7.048 5.968c.828 0 1.654-.147 2.397-.345a.714.714 0 01.59.08l1.56.909a.275.275 0 00.142.048c.133 0 .238-.112.238-.243 0-.06-.023-.118-.038-.177l-.327-1.233a.49.49 0 01.176-.547C21.904 19.87 22.88 18.2 22.88 16.285c0-3.337-3.198-5.968-7.048-5.968h-.263zm-2.174 3.271c.526 0 .953.434.953.967a.96.96 0 01-.953.967.96.96 0 01-.953-.967c0-.533.427-.967.953-.967zm4.37 0c.526 0 .953.434.953.967a.96.96 0 01-.953.967.96.96 0 01-.953-.967c0-.533.427-.967.953-.967z"/></svg><span class="tp">微信</span></a>
+          <a class="sic" href="#"><svg viewBox="0 0 24 24"><path d="M3.429 24A3.429 3.429 0 113.43 17.143 3.429 3.429 0 013.43 24zM0 10.286v4.571a9.143 9.143 0 019.143 9.143h4.571C13.714 16.838 7.162 10.286 0 10.286zM0 0v4.571c10.714 0 19.429 8.714 19.429 19.429H24C24 10.762 13.238 0 0 0z"/></svg><span class="tp">RSS</span></a>
+        </div>
+      </div>
+      <div class="mb rv">
+        <form action="https://formspree.io/f/xzzgvnwd" method="POST">
+  <input type="hidden" name="_subject" value="网站有新留言">
+  <textarea name="message" placeholder="说点什么..." required></textarea>
+  <br><button type="submit" class="send-btn">发 送</button>
+</form>
+      </div>
+    </div>
+    <p class="copy">© 2025 ENTRA</p>
+  </section>
+
+</main>
+</div>
+
+<button class="btt" id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+/* ============================================
+   JavaScript 交互逻辑
+   
+   包含以下功能模块:
+   1. 粒子星空动画（Canvas 绘制）
+   2. 侧边栏伸缩 → 主内容自适应
+   3. 导航栏点击跳转 + 滚动追踪
+   4. 滚动渐入动画
+   5. 返回顶部按钮
+   6. 主题切换
+   7. 文章分类标签
+   8. 手机端菜单
+   ============================================ */
+
+/* ========== 1. 粒子星空动画 ==========
+   在 Canvas 上绘制漂浮粒子 + 连接线 + 星云光晕
+   粒子会跟随鼠标轻微散开（交互效果）
+   
+   可调参数:
+   • CL 数组 — 粒子颜色（RGB），可以增删颜色
+   • N（粒子数量）— 当前按屏幕面积自动计算，最多220个
+   • 160 — 鼠标影响半径（像素），越大鼠标影响范围越大
+   • 7000 — 粒子连线距离阈值，越大连线越多
+   • neb 数组 — 背景星云光晕的位置、大小、颜色
+*/
+const cv=document.getElementById('pc'),ctx=cv.getContext('2d');
+let W,H,mx=-1e3,my=-1e3; // W/H=画布尺寸, mx/my=鼠标位置
+function rz(){W=cv.width=innerWidth;H=cv.height=innerHeight} // 窗口大小变化时重置画布
+rz();addEventListener('resize',rz);
+addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY}); // 追踪鼠标
+
+// 粒子颜色表: [R, G, B] — 可以自由增删
+const CL=[
+  [0,212,255],    // 青色
+  [94,175,237],   // 冰蓝
+  [167,139,250],  // 紫色
+  [255,255,255],  // 白色
+  [0,230,120],    // 绿色
+  [130,150,255]   // 蓝紫
+];
+
+// 粒子类 — 每个粒子有位置、速度、大小、颜色、透明度
+class Pt{
+  constructor(){this.rs()}
+  rs(){ // 随机初始化
+    this.x=Math.random()*W; this.y=Math.random()*H; // 位置
+    this.vx=(Math.random()-.5)*.25; this.vy=(Math.random()-.5)*.25; // 速度
+    this.r=Math.random()*1.8+.4; // 半径
+    const cl=CL[Math.random()*CL.length|0]; // 随机颜色
+    this.cr=cl[0];this.cg=cl[1];this.cb=cl[2];
+    this.ba=Math.random()*.55+.2; this.a=this.ba; // 基础透明度
+    this.ph=Math.random()*6.28; // 闪烁相位
+    this.tw=Math.random()*.01+.003; // 闪烁速度
+  }
+  up(t){ // 更新位置
+    this.x+=this.vx; this.y+=this.vy;
+    // 鼠标交互: 靠近鼠标时被推开，变亮
+    const dx=this.x-mx,dy=this.y-my,d=Math.sqrt(dx*dx+dy*dy);
+    if(d<160){const f=(160-d)/160*.6;this.x+=dx/d*f;this.y+=dy/d*f;this.a=Math.min(1,this.ba+f*.4)}
+    else this.a+=(this.ba-this.a)*.04;
+    this.a*=Math.sin(t*this.tw*50+this.ph)*.2+.8; // 闪烁
+    // 超出屏幕则从另一侧出现
+    if(this.x<-10)this.x=W+10;if(this.x>W+10)this.x=-10;
+    if(this.y<-10)this.y=H+10;if(this.y>H+10)this.y=-10;
+  }
+  dr(){ // 绘制
+    // 大粒子有光晕效果
+    if(this.r>1){
+      ctx.beginPath();ctx.arc(this.x,this.y,this.r*3.5,0,6.28);
+      const g=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r*3.5);
+      g.addColorStop(0,`rgba(${this.cr},${this.cg},${this.cb},${this.a*.1})`);
+      g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fill();
+    }
+    ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,6.28);
+    ctx.fillStyle=`rgba(${this.cr},${this.cg},${this.cb},${this.a})`;ctx.fill();
+  }
+}
+
+// 粒子之间的连线（距离近的粒子之间画细线）
+function lines(ps){
+  for(let i=0;i<ps.length;i++)
+    for(let j=i+1;j<ps.length;j++){
+      const dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y,d=dx*dx+dy*dy;
+      if(d<7000){ // 距离阈值（平方），可调大/调小
+        ctx.beginPath();ctx.moveTo(ps[i].x,ps[i].y);ctx.lineTo(ps[j].x,ps[j].y);
+        ctx.strokeStyle=`rgba(94,175,237,${(1-d/7000)*.06})`;ctx.lineWidth=.5;ctx.stroke();
+      }
+    }
+}
+
+// 星云光晕（背景模糊的彩色光斑）
+const neb=[
+  {x:.2, y:.4, r:280, c:[0,160,200], a:.025},  // 左侧青色
+  {x:.75,y:.25,r:220, c:[160,80,200],a:.02},    // 右上紫色
+  {x:.5, y:.75,r:300, c:[20,80,200], a:.018}    // 中下蓝色
+];
+function drawNeb(){
+  for(const n of neb){
+    const g=ctx.createRadialGradient(n.x*W,n.y*H,0,n.x*W,n.y*H,n.r);
+    g.addColorStop(0,`rgba(${n.c},${n.a})`);g.addColorStop(1,'transparent');
+    ctx.fillStyle=g;ctx.fillRect(n.x*W-n.r,n.y*H-n.r,n.r*2,n.r*2);
+  }
+}
+
+// 创建粒子（数量根据屏幕大小自动调整）
+const N=Math.min(220,Math.floor(W*H/6000));
+const pts=Array.from({length:N},()=>new Pt);
+
+// 动画循环
+function anim(){
+  ctx.clearRect(0,0,W,H);
+  const t=Date.now()*.001;
+  drawNeb();  // 画星云
+  lines(pts); // 画连线
+  for(const p of pts){p.up(t);p.dr()} // 更新和绘制每个粒子
+  requestAnimationFrame(anim);
+}
+anim();
+
+/* ========== 2. 侧边栏伸缩 → 主内容自适应 ==========
+   当鼠标进入侧边栏时，主内容区 margin-left 从 78px 变为 260px
+   鼠标离开时恢复。CSS transition 让变化平滑。
+*/
+const sb=document.getElementById('sidebar');
+const main=document.getElementById('mainContent');
+const sbC=78,sbW=260; // 收起/展开宽度（和 CSS 变量对应）
+
+sb.addEventListener('mouseenter',()=>{
+  main.style.marginLeft=sbW+'px'; // 展开: 主内容右移
+});
+sb.addEventListener('mouseleave',()=>{
+  main.style.marginLeft=sbC+'px'; // 收起: 主内容左移回来
+});
+
+/* ========== 3. 导航点击跳转 + 滚动追踪 ==========
+   
+   点击导航项时:
+   1. 立即高亮被点击的项
+   2. 瞬间跳到对应板块（不用平滑滚动，避免按钮闪烁）
+   3. 锁定 600ms，期间滚动事件不会改变高亮
+   
+   滚动时:
+   • 自动检测当前在哪个板块，高亮对应导航项
+   • 到达页面底部时强制高亮"联系"
+*/
+const navItems=document.querySelectorAll('#sideNav li');
+let clickLock=false; // 点击锁：防止滚动事件干扰点击效果
+
+navItems.forEach(item=>{
+  item.querySelector('a').addEventListener('click',function(e){
+    e.preventDefault(); // 阻止默认的锚点跳转（我们自己控制滚动）
+    navItems.forEach(i=>i.classList.remove('active'));
+    item.classList.add('active'); // 立即高亮
+    clickLock=true; // 开启锁定
+    const target=document.getElementById(item.dataset.target);
+    if(target){
+      window.scrollTo({top:target.offsetTop - 20, behavior:'auto'}); // 瞬间跳转
+    }
+    setTimeout(()=>{ clickLock=false; }, 600); // 600ms 后解锁
+  });
+});
+
+// 滚动追踪: 根据当前滚动位置自动高亮导航项
+const sectionIds=['hero','about','projects','articles','bookmarks','contact'];
+addEventListener('scroll',()=>{
+  if(clickLock) return; // 点击锁定期间不处理
+  let cur='hero';
+  // 如果滚到了页面最底部，强制选中"联系"
+  if(window.innerHeight + window.scrollY >= document.body.scrollHeight - 60){
+    cur='contact';
+  } else {
+    sectionIds.forEach(id=>{
+      const el=document.getElementById(id);
+      if(el && scrollY >= el.offsetTop - 250) cur=id;
+    });
+  }
+  navItems.forEach(li=>{
+    li.classList.remove('active');
+    if(li.dataset.target===cur) li.classList.add('active');
+  });
+});
+
+/* ========== 4. 滚动渐入动画 ==========
+   使用 IntersectionObserver 检测元素是否进入视口
+   进入时添加 .vis 类触发 CSS 动画（从下方浮上来 + 去模糊）
+   
+   如果要调整动画效果，修改 CSS 里的 .rv 和 .rv.vis
+*/
+const obs=new IntersectionObserver(es=>{es.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('vis'),i*60)})},{threshold:.05});
+document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
+
+/* ========== 5. 返回顶部按钮 ========== */
+addEventListener('scroll',()=>document.getElementById('btt').classList.toggle('show',scrollY>400));
+
+/* ========== 6. 主题切换 ==========
+   使用 <theme-button> Web Component 作为主控
+   它触发 'change' 事件，detail 值为 'light' 或 'dark'
+   
+   三个触发源:
+   • theme-button 组件（侧边栏展开时）
+   • sb-footer-mini 小图标（侧边栏收起时）
+   • tbMob 按钮（手机端顶栏）
+*/
+
+// 核心切换函数
+function setTheme(t){
+  document.documentElement.dataset.theme=t; // 修改 <html data-theme>
+  const icon=t==='dark'?'☾':'☀';
+  document.getElementById('tbMob').textContent=icon;
+  document.getElementById('themeMinBtn').textContent=icon;
+}
+
+// 监听 theme-button 组件的 change 事件
+const themeBtn=document.getElementById('themeBtn');
+if(themeBtn){
+  themeBtn.addEventListener('change',(e)=>{
+    setTheme(e.detail); // e.detail 是 'light' 或 'dark'
+  });
+}
+
+// 侧边栏收起时的小图标 — 点击时需要同步触发 theme-button
+document.getElementById('themeMinBtn').addEventListener('click',()=>{
+  // 先切换主题
+  const next=document.documentElement.dataset.theme==='dark'?'light':'dark';
+  setTheme(next);
+  // 同步 theme-button 的状态（触发它的内部 onclick）
+  if(themeBtn && themeBtn.shadowRoot){
+    const comp=themeBtn.shadowRoot.querySelector('.components');
+    if(comp) comp.onclick();
+  }
+});
+
+// 手机端顶栏按钮 — 同理
+document.getElementById('tbMob').addEventListener('click',()=>{
+  const next=document.documentElement.dataset.theme==='dark'?'light':'dark';
+  setTheme(next);
+  if(themeBtn && themeBtn.shadowRoot){
+    const comp=themeBtn.shadowRoot.querySelector('.components');
+    if(comp) comp.onclick();
+  }
+});
+
+/* ========== 7. 文章分类标签切换 ==========
+   点击标签时切换 .on 类（高亮效果）
+   目前只是视觉切换，正式版可以加过滤逻辑
+*/
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on');
+  });
+});
+
+/* ========== 8. 手机端汉堡菜单 ========== */
+document.getElementById('mobBtn').addEventListener('click',()=>{
+  document.getElementById('mobMenu').classList.toggle('open');
+});
+function closeMob(){
+  document.getElementById('mobMenu').classList.remove('open');
+}
+</script>
+
+<!-- ============================================
+     theme-button Web Component（日夜切换按钮组件）
+     这段代码定义了 <theme-button> 自定义标签
+     使用 Shadow DOM 封装，不会影响页面其他样式
+     
+     属性:
+     • value — 初始主题 "light" 或 "dark"
+     • size — 按钮大小（数值，默认3）
+     
+     事件:
+     • change — 主题切换时触发，e.detail 为新主题值
+     ============================================ -->
+<script>
+(()=>{const func=(root,initTheme,changeTheme)=>{const $=s=>{let dom=root.querySelectorAll(s);return dom.length==1?dom[0]:dom};let mainButton=$(".main-button"),daytimeBackground=$(".daytime-background"),cloud=$(".cloud"),cloudList=$(".cloud-son"),cloudLight=$(".cloud-light"),components=$(".components"),moon=$(".moon"),stars=$(".stars"),star=$(".star"),isMoved=false,isClicked=false;components.onclick=()=>{if(isMoved){mainButton.style.transform="translateX(0)";mainButton.style.backgroundColor="rgba(255, 195, 35,1)";mainButton.style.boxShadow="3em 3em 5em rgba(0, 0, 0, 0.5), inset -3em -5em 3em -3em rgba(0, 0, 0, 0.5), inset 4em 5em 2em -2em rgba(255, 230, 80,1)";daytimeBackground[0].style.transform="translateX(0)";daytimeBackground[1].style.transform="translateX(0)";daytimeBackground[2].style.transform="translateX(0)";cloud.style.transform="translateY(10em)";cloudLight.style.transform="translateY(10em)";components.style.backgroundColor="rgba(70, 133, 192,1)";moon[0].style.opacity="0";moon[1].style.opacity="0";moon[2].style.opacity="0";stars.style.transform="translateY(-125em)";stars.style.opacity="0";changeTheme("light")}else{mainButton.style.transform="translateX(110em)";mainButton.style.backgroundColor="rgba(195, 200,210,1)";mainButton.style.boxShadow="3em 3em 5em rgba(0, 0, 0, 0.5), inset -3em -5em 3em -3em rgba(0, 0, 0, 0.5), inset 4em 5em 2em -2em rgba(255, 255, 210,1)";daytimeBackground[0].style.transform="translateX(110em)";daytimeBackground[1].style.transform="translateX(80em)";daytimeBackground[2].style.transform="translateX(50em)";cloud.style.transform="translateY(80em)";cloudLight.style.transform="translateY(80em)";components.style.backgroundColor="rgba(25,30,50,1)";moon[0].style.opacity="1";moon[1].style.opacity="1";moon[2].style.opacity="1";stars.style.transform="translateY(-62.5em)";stars.style.opacity="1";changeTheme("dark")}isClicked=true;setTimeout(()=>{isClicked=false},500);isMoved=!isMoved};mainButton.addEventListener("mousemove",function(){if(isClicked)return;if(isMoved){mainButton.style.transform="translateX(100em)";daytimeBackground[0].style.transform="translateX(100em)";daytimeBackground[1].style.transform="translateX(73em)";daytimeBackground[2].style.transform="translateX(46em)";star[0].style.top="10em";star[0].style.left="36em";star[1].style.top="40em";star[1].style.left="87em";star[2].style.top="26em";star[2].style.left="16em";star[3].style.top="38em";star[3].style.left="63em";star[4].style.top="20.5em";star[4].style.left="72em";star[5].style.top="51.5em";star[5].style.left="35em"}else{mainButton.style.transform="translateX(10em)";daytimeBackground[0].style.transform="translateX(10em)";daytimeBackground[1].style.transform="translateX(7em)";daytimeBackground[2].style.transform="translateX(4em)";cloudList[0].style.right="-24em";cloudList[0].style.bottom="10em";cloudList[1].style.right="-12em";cloudList[1].style.bottom="-27em";cloudList[2].style.right="17em";cloudList[2].style.bottom="-43em";cloudList[3].style.right="46em";cloudList[3].style.bottom="-39em";cloudList[4].style.right="70em";cloudList[4].style.bottom="-65em";cloudList[5].style.right="109em";cloudList[5].style.bottom="-54em";cloudList[6].style.right="-23em";cloudList[6].style.bottom="10em";cloudList[7].style.right="-11em";cloudList[7].style.bottom="-26em";cloudList[8].style.right="18em";cloudList[8].style.bottom="-42em";cloudList[9].style.right="47em";cloudList[9].style.bottom="-38em";cloudList[10].style.right="74em";cloudList[10].style.bottom="-64em";cloudList[11].style.right="110em";cloudList[11].style.bottom="-55em"}});mainButton.addEventListener("mouseout",function(){if(isClicked)return;if(isMoved){mainButton.style.transform="translateX(110em)";daytimeBackground[0].style.transform="translateX(110em)";daytimeBackground[1].style.transform="translateX(80em)";daytimeBackground[2].style.transform="translateX(50em)";star[0].style.top="11em";star[0].style.left="39em";star[1].style.top="39em";star[1].style.left="91em";star[2].style.top="26em";star[2].style.left="19em";star[3].style.top="37em";star[3].style.left="66em";star[4].style.top="21em";star[4].style.left="75em";star[5].style.top="51em";star[5].style.left="38em"}else{mainButton.style.transform="translateX(0em)";daytimeBackground[0].style.transform="translateX(0em)";daytimeBackground[1].style.transform="translateX(0em)";daytimeBackground[2].style.transform="translateX(0em)";cloudList[0].style.right="-20em";cloudList[0].style.bottom="10em";cloudList[1].style.right="-10em";cloudList[1].style.bottom="-25em";cloudList[2].style.right="20em";cloudList[2].style.bottom="-40em";cloudList[3].style.right="50em";cloudList[3].style.bottom="-35em";cloudList[4].style.right="75em";cloudList[4].style.bottom="-60em";cloudList[5].style.right="110em";cloudList[5].style.bottom="-50em";cloudList[6].style.right="-20em";cloudList[6].style.bottom="10em";cloudList[7].style.right="-10em";cloudList[7].style.bottom="-25em";cloudList[8].style.right="20em";cloudList[8].style.bottom="-40em";cloudList[9].style.right="50em";cloudList[9].style.bottom="-35em";cloudList[10].style.right="75em";cloudList[10].style.bottom="-60em";cloudList[11].style.right="110em";cloudList[11].style.bottom="-50em"}});const getRandomDirection=()=>{const directions=["2em","-2em"];return directions[Math.floor(Math.random()*directions.length)]};const moveElementRandomly=e=>{e.style.transform=`translate(${getRandomDirection()}, ${getRandomDirection()})`};setInterval(()=>{root.querySelectorAll(".cloud-son").forEach(moveElementRandomly)},1000);if(initTheme==="dark"){components.onclick()}};class ThemeButton extends HTMLElement{constructor(){super()}connectedCallback(){const initTheme=this.getAttribute("value")||"light";const size=+this.getAttribute("size")||3;const shadow=this.attachShadow({mode:"open"});const container=document.createElement("div");container.setAttribute("class","container");container.setAttribute("style",`font-size: ${(size/3).toFixed(2)}px`);container.innerHTML='<div class="components"><div class="main-button"><div class="moon"></div><div class="moon"></div><div class="moon"></div></div><div class="daytime-background"></div><div class="daytime-background"></div><div class="daytime-background"></div><div class="cloud"><div class="cloud-son"></div><div class="cloud-son"></div><div class="cloud-son"></div><div class="cloud-son"></div><div class="cloud-son"></div><div class="cloud-son"></div></div><div class="cloud-light"><div class="cloud-son"></div><div class="cloud-son"></div><div class="cloud-son"></div><div class="cloud-son"></div><div class="cloud-son"></div><div class="cloud-son"></div></div><div class="stars"><div class="star big"><div class="star-son"></div><div class="star-son"></div><div class="star-son"></div><div class="star-son"></div></div><div class="star big"><div class="star-son"></div><div class="star-son"></div><div class="star-son"></div><div class="star-son"></div></div><div class="star medium"><div class="star-son"></div><div class="star-son"></div><div class="star-son"></div><div class="star-son"></div></div><div class="star medium"><div class="star-son"></div><div class="star-son"></div><div class="star-son"></div><div class="star-son"></div></div><div class="star small"><div class="star-son"></div><div class="star-son"></div><div class="star-son"></div><div class="star-son"></div></div><div class="star small"><div class="star-son"></div><div class="star-son"></div><div class="star-son"></div><div class="star-son"></div></div></div></div>';const style=document.createElement("style");style.textContent="*{margin:0;padding:0;transition:0.7s;-webkit-tap-highlight-color:rgba(0,0,0,0)}.container{position:relative;width:180em;height:70em;display:inline-block;vertical-align:bottom;transform:translate3d(0,0,0)}.components{position:relative;width:180em;height:70em;background-color:rgba(70,133,192,1);border-radius:100em;box-shadow:inset 0 0 5em 3em rgba(0,0,0,0.5);overflow:hidden;transition:0.7s;transition-timing-function:cubic-bezier(0,0.5,1,1);cursor:pointer}.main-button{margin:7.5em 0 0 7.5em;width:55em;height:55em;background-color:rgba(255,195,35,1);border-radius:50%;box-shadow:3em 3em 5em rgba(0,0,0,0.5),inset -3em -5em 3em -3em rgba(0,0,0,0.5),inset 4em 5em 2em -2em rgba(255,230,80,1);transition:1.0s;transition-timing-function:cubic-bezier(0.56,1.35,0.52,1.00)}.moon{position:absolute;background-color:rgba(150,160,180,1);box-shadow:inset 0em 0em 1em 1em rgba(0,0,0,0.3);border-radius:50%;transition:0.5s;opacity:0}.moon:nth-child(1){top:7.5em;left:25em;width:12.5em;height:12.5em}.moon:nth-child(2){top:20em;left:7.5em;width:20em;height:20em}.moon:nth-child(3){top:32.5em;left:32.5em;width:12.5em;height:12.5em}.daytime-background{position:absolute;border-radius:50%;transition:1.0s;transition-timing-function:cubic-bezier(0.56,1.35,0.52,1.00)}.daytime-background:nth-child(2){top:-20em;left:-20em;width:110em;height:110em;background-color:rgba(255,255,255,0.2);z-index:-2}.daytime-background:nth-child(3){top:-32.5em;left:-17.5em;width:135em;height:135em;background-color:rgba(255,255,255,0.1);z-index:-3}.daytime-background:nth-child(4){top:-45em;left:-15em;width:160em;height:160em;background-color:rgba(255,255,255,0.05);z-index:-4}.cloud,.cloud-light{transform:translateY(10em);transition:1.0s;transition-timing-function:cubic-bezier(0.56,1.35,0.52,1.00)}.cloud-son{position:absolute;background-color:#fff;border-radius:50%;z-index:-1;transition:transform 6s,right 1s,bottom 1s}.cloud-son:nth-child(6n+1){right:-20em;bottom:10em;width:50em;height:50em}.cloud-son:nth-child(6n+2){right:-10em;bottom:-25em;width:60em;height:60em}.cloud-son:nth-child(6n+3){right:20em;bottom:-40em;width:60em;height:60em}.cloud-son:nth-child(6n+4){right:50em;bottom:-35em;width:60em;height:60em}.cloud-son:nth-child(6n+5){right:75em;bottom:-60em;width:75em;height:75em}.cloud-son:nth-child(6n+6){right:110em;bottom:-50em;width:60em;height:60em}.cloud{z-index:-2}.cloud-light{position:absolute;right:0em;bottom:25em;opacity:0.5;z-index:-3}.stars{transform:translateY(-125em);z-index:-2;transition:1.0s;transition-timing-function:cubic-bezier(0.56,1.35,0.52,1.00)}.big{--size:7.5em}.medium{--size:5em}.small{--size:3em}.star{position:absolute;width:calc(2*var(--size));height:calc(2*var(--size))}.star:nth-child(1){top:11em;left:39em;animation-name:star;animation-duration:3.5s}.star:nth-child(2){top:39em;left:91em;animation-name:star;animation-duration:4.1s}.star:nth-child(3){top:26em;left:19em;animation-name:star;animation-duration:4.9s}.star:nth-child(4){top:37em;left:66em;animation-name:star;animation-duration:5.3s}.star:nth-child(5){top:21em;left:75em;animation-name:star;animation-duration:3s}.star:nth-child(6){top:51em;left:38em;animation-name:star;animation-duration:2.2s}@keyframes star{0%,20%{transform:scale(0)}20%,100%{transform:scale(1)}}.star-son{float:left}.star-son:nth-child(1){--pos:left 0}.star-son:nth-child(2){--pos:right 0}.star-son:nth-child(3){--pos:0 bottom}.star-son:nth-child(4){--pos:right bottom}.star-son{width:var(--size);height:var(--size);background-image:radial-gradient(circle var(--size) at var(--pos),transparent var(--size),#fff)}.star{transform:scale(1);transition-timing-function:cubic-bezier(0.56,1.35,0.52,1.00);transition:1s;animation-iteration-count:infinite;animation-direction:alternate;animation-timing-function:linear}";const changeTheme=detail=>{this.dispatchEvent(new CustomEvent("change",{detail}))};func(container,initTheme,changeTheme);shadow.appendChild(style);shadow.appendChild(container)}}customElements.define("theme-button",ThemeButton)})();
+</script>
+</script>
+
+<!--
+╔═══════════════════════════════════════════════════════════════╗
+║                    部署指南 & 配置说明                        ║
+╠═══════════════════════════════════════════════════════════════╣
+║                                                               ║
+║  一、部署到 GitHub Pages（免费，推荐）                         ║
+║  ─────────────────────────────────────                        ║
+║  1. 注册 GitHub 账号: github.com                              ║
+║  2. 新建仓库，名称填: 你的用户名.github.io                    ║
+║  3. 把这个 HTML 文件改名为 index.html                         ║
+║  4. 上传到仓库（拖拽上传或用 git push）                       ║
+║  5. 进入仓库 Settings → Pages → Source 选 main 分支           ║
+║  6. 等 1-2 分钟，访问 https://你的用户名.github.io            ║
+║                                                               ║
+║  二、用 Hexo 部署（博客功能更完善）                           ║
+║  ─────────────────────────────────                            ║
+║  1. npm install -g hexo-cli                                   ║
+║  2. hexo init my-blog && cd my-blog                           ║
+║  3. 把这个 HTML 作为自定义主题的模板                          ║
+║  4. hexo generate → hexo deploy                               ║
+║  5. 文章放在 source/_posts/ 目录下，用 Markdown 写            ║
+║                                                               ║
+║  三、链接跳转配置                                             ║
+║  ─────────────────                                            ║
+║  • 社交链接: 搜索 href="#" 改成真实地址                       ║
+║    - GitHub:  href="https://github.com/你的用户名"            ║
+║    - Email:   href="mailto:你的邮箱@qq.com"                   ║
+║    - Bilibili: href="https://space.bilibili.com/你的UID"      ║
+║    - 微信: 可链到一个放二维码的页面                           ║
+║                                                               ║
+║  • 文章链接: 搜索 class="ai rv"                               ║
+║    - 改 href="#" 为文章页面地址                                ║
+║    - 用 Hexo 时会自动生成文章 URL                             ║
+║                                                               ║
+║  • 书签链接: 搜索 class="bmc rv"                              ║
+║    - 已配好真实链接，可自行增删                               ║
+║                                                               ║
+║  四、邮箱收消息                                                ║
+║  ──────────────                                               ║
+║  当前的留言框只是前端展示，不能真正发邮件。                   ║
+║  要实现收消息，有以下方案:                                    ║
+║                                                               ║
+║  方案1: Formspree（最简单，免费）                              ║
+║    1. 注册 formspree.io                                       ║
+║    2. 创建一个表单，获得 endpoint URL                         ║
+║    3. 把 <textarea> 包在 <form> 里:                           ║
+║       <form action="https://formspree.io/f/你的ID"            ║
+║             method="POST">                                    ║
+║         <textarea name="message"></textarea>                  ║
+║         <input type="hidden" name="_subject"                  ║
+║                value="网站留言" />                             ║
+║         <button type="submit">发送</button>                   ║
+║       </form>                                                 ║
+║    4. 用户提交后，消息会发到你绑定的邮箱                      ║
+║                                                               ║
+║  方案2: mailto 链接（更简单但体验差）                         ║
+║    把发送按钮改成:                                            ║
+║    <a href="mailto:你的邮箱?subject=网站留言">发送</a>        ║
+║                                                               ║
+║  五、书签图标更换                                              ║
+║  ──────────────                                               ║
+║  当前用 emoji，你可以换成:                                    ║
+║  • 其他 emoji: 直接替换 <div class="bmc-i"> 里的文字          ║
+║  • SVG 图标: 去 simpleicons.org 复制 SVG 代码放进去           ║
+║  • 网站 favicon: <img src="https://网站/favicon.ico">         ║
+║                                                               ║
+║  六、背景图片更换                                              ║
+║  ──────────────                                               ║
+║  文件最顶部 :root 里的两行:                                   ║
+║  --bg-img-dark: url('暗色背景图');                             ║
+║  --bg-img-light: url('亮色背景图');                            ║
+║  改成本地文件名或网络图片链接即可                             ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+-->
+</body>
+</html>
